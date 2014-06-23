@@ -1,9 +1,36 @@
+class Message(object):
+    pass
+
+class MessageQueue(object):
+
+    MSG_ORIGIN = {
+            "Entity": "ENTI",
+            "Controller": "CTRL",
+            "System": "SIM_"
+    }
+    def emit(self, origin, msg_type, data):
+        print "[%s][%s] %s" % (self.MSG_ORIGIN[origin.__class__.__name__],
+                            data["importance"],
+                            data["msg"])
+    pass
+
 class Entity(object):
-    def __init__(self, system=None, **kwargs):
+    def __init__(self, system=None, mq=None, **kwargs):
         self.id = id(self)
         self.properties = kwargs
-        self.observer = system
-        print "[ENTI][*] Entity %d Created" % self.id
+
+        self.observer = None
+        self.mq = None
+
+        if system:
+            self.attach_system(system)
+        if mq:
+            self.attach_message_queue(mq)
+            self.mq.emit(self, "entity_created", {
+                "id": self.id,
+                "msg": "Entity %d Created" % self.id,
+                "importance": "*"
+            })
 
     def add_property(self, key, value):
         if key in self.properties:
@@ -13,7 +40,6 @@ class Entity(object):
         print "[ENTI][ ] Property-Value Pair %s:%s added to Entity %d" % (key, str(value), self.id)
         if self.observer:
             self.observer.notify(self)
-
 
     def update_property(self, key, value):
         if key not in self.properties:
@@ -30,6 +56,9 @@ class Entity(object):
     def attach_system(self, sim):
         self.observer = sim
         sim.notify(self)
+
+    def attach_message_queue(self, mq):
+        self.mq = mq
 
 
 class Controller(object):

@@ -1,8 +1,9 @@
 import time
 
-from sim import Entity, Controller, System
+from sim import Entity, Controller, System, MessageQueue
 
 sim = System()
+mq = MessageQueue()
 
 class HootController(Controller):
     ATTRITION_DAMAGE_PER_UNIT = 0.5
@@ -25,8 +26,7 @@ hootcontroller.add_requirement("hoot")
 
 sim.add_controller(hootcontroller)
 
-hoot = Entity()
-hoot.attach_system(sim)
+hoot = Entity(sim, mq)
 hootcontroller.attach_entity(hoot)
 hoot.add_property("nocturnal", True)
 hoot.add_property("hoot", 1)
@@ -35,8 +35,8 @@ hoot.add_property("health", 100)
 hoot.update_property("health", 80)
 hoot.get_property("health")
 
-while(1):
-    for i in range(0, 23):
-        sim.tick(1)
-        time.sleep(2)
+#while(1):
+#    for i in range(0, 23):
+#        sim.tick(1)
+#        time.sleep(2)
 
