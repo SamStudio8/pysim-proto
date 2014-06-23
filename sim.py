@@ -14,7 +14,7 @@ class MessageQueue(object):
         # Notify subscribers
         if msg_type in self.listeners:
             for listener in self.listeners[msg_type]:
-                listener.notify(data)
+                listener.notify(msg_type, data)
 
         # Print log
         print "[%s][%s] %s" % (data["origin"],
@@ -22,15 +22,12 @@ class MessageQueue(object):
                             data["msg"])
 
 class Entity(object):
-    def __init__(self, system=None, mq=None, **kwargs):
+    def __init__(self, mq=None, **kwargs):
         self.id = id(self)
         self.properties = kwargs
 
-        self.observer = None
         self.mq = None
 
-        if system:
-            self.attach_system(system)
         if mq:
             self.attach_message_queue(mq)
             self.mq.emit("entity_created", {
@@ -51,8 +48,6 @@ class Entity(object):
                 "msg": "Property-Value Pair %s:%s added to Entity %d" % (key, str(value), self.id),
                 "importance": " "
             })
-        if self.observer:
-            self.observer.notify(self)
 
     def update_property(self, key, value):
         if key not in self.properties:
@@ -77,10 +72,6 @@ class Entity(object):
                 "importance": " "
             })
         return self.properties[key]
-
-    def attach_system(self, sim):
-        self.observer = sim
-        sim.notify(self)
 
     def attach_message_queue(self, mq):
         self.mq = mq
@@ -137,6 +128,8 @@ class System(object):
         self.clock = 0
         self.mq = mq
 
+        self.mq.listen("entity_new_property", self)
+
     def add_controller(self, controller):
         self.controllers.append(controller)
         self.mq.emit("sim_controller_registered", {
@@ -171,22 +164,23 @@ class System(object):
         self.clock += 1
         self.clock = self.clock % 24
 
-    def notify(self, entity):
-        if entity not in self.entities:
-            self.entities.append(entity)
-            self.mq.emit("sim_observing_entity", {
-                "origin": "SIM_",
-                "msg": "Simulation observing Entity %d" % entity.id,
-                "importance": "-"
-            })
+    def notify(self, msg_type, data):
+        if msg_type == "entity_new_property":
+            if data["entity"] not in self.entities:
+                self.entities.append(data["entity"])
+                self.mq.emit("sim_observing_entity", {
+                    "origin": "SIM_",
+                    "msg": "Simulation observing Entity %d" % data["entity"].id,
+                    "importance": "-"
+                })
 
-        if entity.id in self.entity_controllers:
-            del self.entity_controllers[entity.id]
-            self.mq.emit("sim_controllers_destroyed", {
-                "origin": "SIM_",
-                "msg": "Controllers for Entity %d destroyed after property change" % entity.id,
-                "importance": " "
-            })
-        self.entity_controllers[entity.id] = []
-        self.auto_attach_controllers(entity)
+            if data["entity"].id in self.entity_controllers:
+                del self.entity_controllers[data["entity"].id]
+                self.mq.emit("sim_controllers_destroyed", {
+                    "origin": "SIM_",
+                    "msg": "Controllers for Entity %d destroyed after property change" % data["entity"].id,
+                    "importance": " "
+                })
+            self.entity_controllers[data["entity"].id] = []
+            self.auto_attach_controllers(data["entity"])
 
