@@ -2,11 +2,21 @@ class MessageQueue(object):
 
     def __init__(self):
         self.listeners = {}
+        self.emit("new_listener", {
+            "origin": "_MQ_",
+            "msg": "Message Queue Created.",
+            "importance": "!"
+        })
 
     def listen(self, msg_type, listener):
         if msg_type not in self.listeners:
             self.listeners[msg_type] = []
         self.listeners[msg_type].append(listener)
+        self.emit("new_listener", {
+            "origin": "_MQ_",
+            "msg": "%s now listening for %s message types" % (str(listener), msg_type),
+            "importance": "!"
+        })
 
     def emit(self, msg_type, data):
         # TODO Check for malformed messages...
@@ -128,7 +138,13 @@ class System(object):
         self.clock = 0
         self.mq = mq
 
+        self.mq.emit("new_simulator", {
+            "origin": "SIM_",
+            "msg": "Simulator Created.",
+            "importance": "!"
+        })
         self.mq.listen("entity_new_property", self)
+
 
     def add_controller(self, controller):
         self.controllers.append(controller)
