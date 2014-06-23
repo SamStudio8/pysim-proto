@@ -42,7 +42,6 @@ hootcontroller.add_requirement("hoot")
 sim.add_controller(hootcontroller)
 
 hoot = Entity(mq)
-hootcontroller.attach_entity(hoot)
 hoot.add_property("nocturnal", True)
 hoot.add_property("hoot", 1)
 hoot.add_property("health", 100)

@@ -158,6 +158,7 @@ class System(object):
         for controller in self.controllers:
             if controller.entity_meets_requirements(entity):
                 self.attach_controller(entity, controller)
+                controller.entity = entity
                 self.mq.emit("sim_controller_autoattach", {
                     "origin": "SIM_",
                     "msg": "Controller %d attached to Entity %d after meeting requirements" % (controller.id, entity.id),
