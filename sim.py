@@ -33,10 +33,15 @@ class Entity(object):
 
 
 class Controller(object):
-    def __init__(self, requirements=[]):
+    def __init__(self, entity=None, requirements=[]):
         self.id = id(self)
+        self.entity = entity
         self.requirements = requirements
         print "[CTRL][*] Controller %d Created" % self.id
+
+    def attach_entity(self, entity):
+        self.entity = entity
+        print "[CTRL][-] Entity %d attached to Controller %d" % (entity.id, self.id)
 
     def add_requirement(self, key):
         self.requirements.append(key)
@@ -45,12 +50,16 @@ class Controller(object):
     def entity_meets_requirements(self, entity):
         return set(self.requirements).issubset(set(entity.properties.keys()))
 
+    def tick(self, clock, dt):
+        raise NotImplementedError()
+
 
 class System(object):
     def __init__(self):
         self.entities = []
         self.controllers = []
         self.entity_controllers = {}
+        self.clock = 0
 
     def add_controller(self, controller):
         self.controllers.append(controller)
@@ -64,6 +73,15 @@ class System(object):
 
     def attach_controller(self, entity, controller):
         self.entity_controllers[entity.id].append(controller)
+
+    def tick(self, dt):
+        print "\n[SIM_] Simulation ticks forward to hour %d" % self.clock
+        for entity in self.entity_controllers:
+            for controller in self.entity_controllers[entity]:
+                controller.tick(self.clock, dt)
+
+        self.clock += 1
+        self.clock = self.clock % 24
 
     def notify(self, entity):
         if entity not in self.entities:
