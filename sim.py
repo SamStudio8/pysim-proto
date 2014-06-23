@@ -27,9 +27,14 @@ class MessageQueue(object):
                             data["msg"])
 
         # Notify subscribers
+        # TODO Unicasting
         if msg_type in self.listeners:
             for listener in self.listeners[msg_type]:
-                listener.notify(msg_type, data)
+                if "id" in data:
+                    if listener.entity.id == data["id"]:
+                        listener.notify(msg_type, data)
+                else:
+                    listener.notify(msg_type, data)
 
 
 class Entity(object):

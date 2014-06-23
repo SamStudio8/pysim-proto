@@ -35,20 +35,21 @@ class HootController(Controller):
             if self.mq:
                 self.mq.emit("entity_needs_doctor", {
                     "origin": "ENTI",
-                    "entity": self,
+                    "entity": self.entity,
                     "msg": "Entity %d calls for medical aid!" % self.entity.id,
                     "importance": "~"
                 })
 
     def notify(self, msg_type, data):
         if msg_type == "entity_gets_doctor":
-            self.entity.update_property("health", 100)
-            if self.mq:
-                self.mq.emit("hoot_health_ok", {
-                    "origin": "ENTI",
-                    "msg": "Entity %d receives a medical kit. Health restored." % self.entity.id,
-                    "importance": " "
-                })
+            if data["id"] == self.entity.id:
+                self.entity.update_property("health", 100)
+                if self.mq:
+                    self.mq.emit("hoot_health_ok", {
+                        "origin": "ENTI",
+                        "msg": "Entity %d receives a medical kit. Health restored." % self.entity.id,
+                        "importance": " "
+                    })
 
 
 class DocController(Controller):
