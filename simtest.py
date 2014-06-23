@@ -2,8 +2,8 @@ import time
 
 from sim import Entity, Controller, System, MessageQueue
 
-sim = System()
 mq = MessageQueue()
+sim = System(mq)
 
 class HootController(Controller):
     ATTRITION_DAMAGE_PER_UNIT = 0.5
@@ -11,16 +11,31 @@ class HootController(Controller):
     def tick(self, clock, dt):
         if clock > 18 or clock < 7:
             if self.entity.properties["hoot"]:
-                print "[ENTI][ ] Entity %d hoots" % (self.entity.id)
-        print "[ENTI][ ] Entity %d suffers attrition!" % self.entity.id
+                if self.mq:
+                    self.mq.emit("hoot_hoot", {
+                        "origin": "ENTI",
+                        "msg": "Entity %d hoots!" % self.entity.id,
+                        "importance": " "
+                    })
+        if self.mq:
+            self.mq.emit("hoot_health_ok", {
+                "origin": "ENTI",
+                "msg": "Entity %d suffers attrition!" % self.entity.id,
+                "importance": " "
+            })
         health = self.entity.get_property("health")
         self.entity.update_property("health", health - (self.ATTRITION_DAMAGE_PER_UNIT * dt))
 
         if clock == 0:
-            print "[ENTI][ ] Entity %d receives a medical kit." % self.entity.id
+            if self.mq:
+                self.mq.emit("hoot_health_ok", {
+                    "origin": "ENTI",
+                    "msg": "Entity %d receives a medical kit. Health restored." % self.entity.id,
+                    "importance": " "
+                })
             self.entity.update_property("health", 100)
 
-hootcontroller = HootController()
+hootcontroller = HootController(mq=mq)
 hootcontroller.add_requirement("nocturnal")
 hootcontroller.add_requirement("hoot")
 
@@ -35,8 +50,8 @@ hoot.add_property("health", 100)
 hoot.update_property("health", 80)
 hoot.get_property("health")
 
-#while(1):
-#    for i in range(0, 23):
-#        sim.tick(1)
-#        time.sleep(2)
+while(1):
+    for i in range(0, 23):
+        sim.tick(1)
+        time.sleep(2)
 
