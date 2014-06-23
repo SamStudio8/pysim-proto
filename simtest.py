@@ -6,7 +6,11 @@ mq = MessageQueue()
 sim = System(mq)
 
 class HootController(Controller):
-    ATTRITION_DAMAGE_PER_UNIT = 0.5
+    ATTRITION_DAMAGE_PER_UNIT = 10
+
+    def __init__(self, mq):
+        super(HootController, self).__init__(self, mq)
+        self.mq.listen("entity_gets_doctor", self)
 
     def tick(self, clock, dt):
         if clock > 18 or clock < 7:
@@ -18,24 +22,49 @@ class HootController(Controller):
                         "importance": " "
                     })
         if self.mq:
-            self.mq.emit("hoot_health_ok", {
+            self.mq.emit("hoot_health_loss", {
                 "origin": "ENTI",
                 "msg": "Entity %d suffers attrition!" % self.entity.id,
                 "importance": " "
             })
         health = self.entity.get_property("health")
-        self.entity.update_property("health", health - (self.ATTRITION_DAMAGE_PER_UNIT * dt))
+        health -= (self.ATTRITION_DAMAGE_PER_UNIT * dt)
+        self.entity.update_property("health", health)
 
-        if clock == 0:
+        if health <= 10:
+            if self.mq:
+                self.mq.emit("entity_needs_doctor", {
+                    "origin": "ENTI",
+                    "entity": self,
+                    "msg": "Entity %d calls for medical aid!" % self.entity.id,
+                    "importance": "~"
+                })
+
+    def notify(self, msg_type, data):
+        if msg_type == "entity_gets_doctor":
+            self.entity.update_property("health", 100)
             if self.mq:
                 self.mq.emit("hoot_health_ok", {
                     "origin": "ENTI",
                     "msg": "Entity %d receives a medical kit. Health restored." % self.entity.id,
                     "importance": " "
                 })
-            self.entity.update_property("health", 100)
+
 
 class DocController(Controller):
+
+    def __init__(self, mq):
+        super(DocController, self).__init__(self, mq)
+        self.mq.listen("entity_needs_doctor", self)
+
+    def notify(self, msg_type, data):
+        if msg_type == "entity_needs_doctor":
+            self.mq.emit("entity_gets_doctor", {
+                "origin": "ENTI",
+                "id": data["entity"].id,
+                "msg": "Entity %d sends a medical kit to Entity %d." % (self.entity.id, data["entity"].id),
+                "importance": "~"
+            })
 
     def tick(self, clock, dt):
         pass

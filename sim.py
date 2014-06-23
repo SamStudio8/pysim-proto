@@ -21,15 +21,16 @@ class MessageQueue(object):
     def emit(self, msg_type, data):
         # TODO Check for malformed messages...
 
+        # Print log
+        print "[%s][%s] %s" % (data["origin"],
+                            data["importance"],
+                            data["msg"])
+
         # Notify subscribers
         if msg_type in self.listeners:
             for listener in self.listeners[msg_type]:
                 listener.notify(msg_type, data)
 
-        # Print log
-        print "[%s][%s] %s" % (data["origin"],
-                            data["importance"],
-                            data["msg"])
 
 class Entity(object):
     def __init__(self, mq=None, **kwargs):
