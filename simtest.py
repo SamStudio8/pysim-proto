@@ -35,11 +35,20 @@ class HootController(Controller):
                 })
             self.entity.update_property("health", 100)
 
+class DocController(Controller):
+
+    def tick(self, clock, dt):
+        pass
+
 hootcontroller = HootController(mq=mq)
 hootcontroller.add_requirement("nocturnal")
 hootcontroller.add_requirement("hoot")
 
+doccontroller = DocController(mq=mq)
+doccontroller.add_requirement("has_doctorate")
+
 sim.add_controller(hootcontroller)
+sim.add_controller(doccontroller)
 
 hoot = Entity(mq)
 hoot.add_property("nocturnal", True)
@@ -48,6 +57,10 @@ hoot.add_property("health", 100)
 
 hoot.update_property("health", 80)
 hoot.get_property("health")
+
+
+doctor = Entity(mq)
+doctor.add_property("has_doctorate", True)
 
 while(1):
     for i in range(0, 23):

@@ -88,10 +88,10 @@ class Entity(object):
 
 
 class Controller(object):
-    def __init__(self, entity=None, mq=None, requirements=[]):
+    def __init__(self, entity=None, mq=None):
         self.id = id(self)
         self.entity = entity
-        self.requirements = requirements
+        self.requirements = []
         self.mq = None
 
         if mq:
