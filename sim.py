@@ -28,7 +28,6 @@ class Entity(object):
     def attach_system(self, sim):
         self.observer = sim
         sim.notify(self)
-        print "[SIM_] Simulation observing Entity %d" % self.id
 
 
 class Controller(object):
@@ -67,6 +66,7 @@ class System(object):
     def notify(self, entity):
         if entity not in self.entities:
             self.entities.append(entity)
+            print "[SIM_] Simulation observing Entity %d" % entity.id
 
         if entity.id in self.entity_controllers:
             del self.entity_controllers[entity.id]
