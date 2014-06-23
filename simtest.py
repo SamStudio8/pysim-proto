@@ -14,4 +14,7 @@ hoot.add_property("nocturnal", True)
 hoot.add_property("hoot", 0)
 hoot.add_property("health", 100)
 
+hoot.update_property("health", 80)
+hoot.get_property("health")
+
 
